@@ -1,83 +1,83 @@
 package com.example.coffeeUnitTests;
 
 import com.example.coffee.Calculator;
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import static com.example.coffee.CoffeeRecipe.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.test.context.ContextConfiguration;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-@SpringBootTest
+@ContextConfiguration
 public class CalculatorTests {
     Calculator calculator = new Calculator();
 
-    @Test
-    public void CalculateTheAmountOfRequiredWaterToMakeCoffee()
+    @ParameterizedTest
+    @ValueSource(ints = {2})
+    public void CalculateRequiredWaterAmountToMakeCoffee(int requestedCups)
     {
-        int requestedCups = 2;
         int expectedRequiredWater = 400;
-        int actualRequiredWater = calculator.CalculateRequiredIngredient(mlOfWaterPerCup, requestedCups);
+        int actualRequiredWater = calculator.calculateRequiredWater(requestedCups);
 
         assertEquals(expectedRequiredWater, actualRequiredWater);
     }
 
-    @Test
-    public void CalculateTheAmountOfRequiredMilkToMakeCoffee()
+    @ParameterizedTest
+    @ValueSource(ints = {2})
+    public void CalculateRequiredMilkAmountToMakeCoffee(int requestedCups)
     {
-        int requestedCups = 2;
         int expectedRequiredMilk = 100;
-        int actualRequiredMilk = calculator.CalculateRequiredIngredient(mlOfMilkPerCup, requestedCups);
+        int actualRequiredMilk = calculator.calculateRequiredMilk(requestedCups);
 
         assertEquals(expectedRequiredMilk, actualRequiredMilk);
     }
 
-    @Test
-    public void CalculateTheAmountOfRequiredCoffeeBeansToMakeCoffee()
+    @ParameterizedTest
+    @ValueSource(ints = {2})
+    public void CalculateRequiredBeansAmountToMakeCoffee(int requestedCups)
     {
-        int requestedCups = 2;
         int expectedRequiredCoffeeBeans = 30;
-        int actualRequiredCoffeeBeans = calculator.CalculateRequiredIngredient(gramOfCoffeePerCup, requestedCups);
+        int actualRequiredCoffeeBeans = calculator.calculateRequiredBeans(requestedCups);
 
         assertEquals(expectedRequiredCoffeeBeans, actualRequiredCoffeeBeans);
     }
 
-    @Test
-    public void CalculateTheAmountOfAvailableCupsWithWater()
+    @ParameterizedTest
+    @ValueSource(ints = {400})
+    public void CalculateAvailableCupsWithWater(int availableWater)
     {
-        int availableWater = 400;
         int expectedCups = 2;
-        int actualCups = calculator.CalculateAvailableCupPerIngrtedient(availableWater, mlOfWaterPerCup);
+        int actualCups = calculator.calculateAvailableCupsWithWater(availableWater);
 
         assertEquals(expectedCups, actualCups);
     }
 
-    @Test
-    public void CalculateTheAmountOfAvailableCupsWithMilk()
+    @ParameterizedTest
+    @ValueSource(ints = {150})
+    public void CalculateAvailableCupsWithMilk(int availableMilk)
     {
-        int availableMilk = 150;
         int expectedCups = 3;
-        int actualCups = calculator.CalculateAvailableCupPerIngrtedient(availableMilk, mlOfMilkPerCup);
+        int actualCups = calculator.calculateAvailableCupsWithMilk(availableMilk);
 
         assertEquals(expectedCups, actualCups);
     }
 
-    @Test
-    public void CalculateTheAmountOfAvailableCupsWithCoffeeBeans()
+    @ParameterizedTest
+    @ValueSource(ints = {30})
+    public void CalculateAvailableCupsWithBeans(int availableCoffeeBeans)
     {
-        int availableCoffeeBeans = 30;
         int expectedCups = 2;
-        int actualCups = calculator.CalculateAvailableCupPerIngrtedient(availableCoffeeBeans, gramOfCoffeePerCup);
+        int actualCups = calculator.calculateAvailableCupsWithBeans(availableCoffeeBeans);
 
         assertEquals(expectedCups, actualCups);
     }
 
-    @Test
-    public void GetMinimumAvailableCupsOfCoffee()
+    @ParameterizedTest
+    @CsvSource({ "300, 200, 30" })
+    public void GetMinimumAvailableCupsOfCoffee(int availableCupsWithWater, int availableCupsWithMilk, int availableCupsWithCoffeeBeans)
     {
-        int availableCupsWithWater = 10;
-        int availableCupsWithMilk = 5;
-        int availableCupsWithCoffeeBeans = 2;
-        int expectedAvailableCups = 2;
+        int expectedAvailableCups = 30;
         int actualAvailableCups = calculator.GetMinimumAvailableCups(availableCupsWithWater, availableCupsWithMilk, availableCupsWithCoffeeBeans);
 
         assertEquals(expectedAvailableCups, actualAvailableCups);

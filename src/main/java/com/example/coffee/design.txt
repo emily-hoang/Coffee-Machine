@@ -1,0 +1,35 @@
+Main()
+- i/o
+- validates the user input
+- from the input, get the Coffee from the factory.
+- pass that coffeeObject into the coffee machjine.
+- coffee machine validate the order (check the resources to make sure that it can make the order)
+- coffee machine make the order (subtract the resources)
+- coffee machine print out the state
+
+
+interface ICoffeeFactory()
+- create()
+CoffeeFactory()
+- create(): switch(coffeeType) instantiate a Coffee object
+
+enum CoffeeType()
+- ESPRESSO, LATTE, CAPPUCCINO
+
+interface ICoffee()
+- water, milk, beans, price
+- make() return the ingredients for each coffee
+
+Espresso() extends ICoffee
+- 250ml water, 16g beans, price 4$
+- make
+Latte() extends ICoffee
+- 350ml water, 75ml milk, 20g beans, price 7$
+Cappuccino() extends ICoffee
+- 200ml water, 100ml milk, 12g beans, price 6$
+
+CoffeeVendingMachine()
+- check the current state of resources to make sure that the machine can take the order
+- calculate the resources after each action is taken
+- printState() pass the hashMap to the runner class to print out the state
+

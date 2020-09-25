@@ -1,93 +1,130 @@
 package com.example.coffeeUnitTests;
 
-import com.example.coffee.Calculator;
 import com.example.coffee.CoffeeMachine;
+import com.example.coffee.ICoffeeRecipe;
+import com.example.coffee.ICoffeeRecipe;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.test.context.ContextConfiguration;
 
-@SpringBootTest
+import java.util.HashMap;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+
+@ContextConfiguration
 public class CoffeeMachineTests {
-    CoffeeMachine machine = new CoffeeMachine(new Calculator());
+    int currentWater = 600;
+    int currentMilk = 400;
+    int currentBeans = 100;
+    int currentCups = 10;
+    int currentMoney = 500;
 
-    @Test
-    public void WhenHasEnoughIngredientsToMakeEnoughCoffeeAsRequested_ThenOuputTheAppropiateMessage()
+    CoffeeMachine machine = new CoffeeMachine(currentWater, currentMilk, currentBeans, currentCups, currentMoney);
+
+    @ParameterizedTest
+    @CsvSource({ "300, 65, 100, 1" })
+    public void WhenHasEnoughIngredientsToMakeEnoughCoffeeOrder_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups)
     {
-        String expectedMessage = "Yes, I can make that amount of coffee";
-        int water = 300;
-        int milk = 65;
-        int coffee = 100;
-        int numberOfCups = 1;
-        String actualMessage = machine.Response(water, milk, coffee, numberOfCups);
+        String expectedMessage = "Yes, I can make that amount of coffee.";
+        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "1550, 299, 300, 3, 2" })
+    public void WhenHasEnoughIngredientsToMakeMoreCoffeeThanOrder_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups, int additionalCups)
+    {
+        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
+        String expectedMessage = "Yes, I can make that amount of coffee (and even " + additionalCups + " more than that).";
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "200, 50, 15, 0, 1" })
+    public void WhenHasEnoughIngredientsAndNoCoffeeIsRequested_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups, int additionalCups)
+    {
+        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
+        String expectedMessage = "Yes, I can make that amount of coffee (and even " + additionalCups + " more than that).";
+
+        assertEquals(expectedMessage, actualMessage);
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "500, 250, 200, 10, 2" })
+    public void WhenDoesntHasEnoughIngredientsToMakeCoffeeOrder_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups, int availableCups)
+    {
+        String expectedMessage = "Sorry, I can make only " + availableCups + " cup(s) of coffee.";
+        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
 
         assertEquals(expectedMessage, actualMessage);
     }
 
     @Test
-    public void WhenHasMoreIngredientsThanRequestedAmountOfCoffee_ThenOutputTheAppropiateMessage()
+    public void PrintOutTheCurrentStateOfTheCoffeeMachine()
     {
-        int water = 1550;
-        int milk = 299;
-        int coffee = 300;
-        int numberOfCups = 3;
-        int additionalCups = 2;
-        String actualMessage = machine.Response(water, milk, coffee, numberOfCups);
-        String expectedMessage = "Yes, I can make that amount of coffee (and even " + additionalCups + " more than that)";
+        HashMap<String, Integer> expectedMachineState = new HashMap<>();
 
-        assertEquals(expectedMessage, actualMessage);
+        expectedMachineState.put("water", currentWater);
+        expectedMachineState.put("milk", currentMilk);
+        expectedMachineState.put("beans", currentBeans);
+        expectedMachineState.put("cups", currentCups);
+        expectedMachineState.put("money", currentMoney);
+
+        HashMap<String, Integer> actualMachineState = machine.getState();
+
+        assertTrue(expectedMachineState.equals(actualMachineState));
     }
 
-    @Test
-    public void WhenHasEnoughIngredientsAndNoCoffeeIsRequested_ThenOutputTheAppropiateMessage()
+    @ParameterizedTest
+    @CsvSource({ "1" })
+    public void WhenAbleToMakeCoffee_ThenReturnTrue(int cupsOrder)
     {
-        int water = 200;
-        int milk = 50;
-        int coffee = 15;
-        int numberOfCups = 0;
-        int additionalCups = 1;
-        String actualMessage = machine.Response(water, milk, coffee, numberOfCups);
-        String expectedMessage = "Yes, I can make that amount of coffee (and even " + additionalCups + " more than that)";
+        ICoffeeRecipe mockCoffeeRecipe = mock(ICoffeeRecipe.class);
+        mockCoffeeRecipe.setWater(250);
+        mockCoffeeRecipe.setMilk(0);
+        mockCoffeeRecipe.setBeans(16);
+        mockCoffeeRecipe.setCost(4);
 
-        assertEquals(expectedMessage, actualMessage);
+        boolean makeCoffee = machine.makeCoffee(mockCoffeeRecipe, cupsOrder);
+
+        assertEquals(true, makeCoffee);
     }
 
-    @Test
-    public void WhenDoesntHasEnoughIngredientsToMakeTheRequestedAmountOfCoffee_ThenOuputTheAppropiateMessage()
+    @ParameterizedTest
+    @CsvSource({ "20" })
+    public void WhenNotAbleToMakeCoffee_ThenReturnFalse(int cupsOrder)
     {
-        int water = 500;
-        int milk = 250;
-        int coffee = 200;
-        int numberOfCups = 10;
-        int availableCups = 2;
-        String expectedMessage = "Sorry, I can make only " + availableCups + " cup(s) of coffee";
-        String actualMessage = machine.Response(water, milk, coffee, numberOfCups);
+        ICoffeeRecipe mockCoffeeRecipe = mock(ICoffeeRecipe.class);
+        mockCoffeeRecipe.setWater(250);
+        mockCoffeeRecipe.setMilk(0);
+        mockCoffeeRecipe.setBeans(16);
+        mockCoffeeRecipe.setCost(4);
 
-        assertEquals(expectedMessage, actualMessage);
+        boolean makeCoffee = machine.makeCoffee(mockCoffeeRecipe, cupsOrder);
+
+        assertEquals(false, makeCoffee);
     }
 
-    @Test
-    public void WhenHasNoIngredientsToMakeTheRequestedAmountOfCoffee_ThenOuputTheAppropiateMessage()
+    @ParameterizedTest
+    @CsvSource({ "1" })
+    public void AfterMakingCoffee_ThenReturnTheCurrentState(int cupsOrder)
     {
-        int water = 0;
-        int milk = 0;
-        int coffee = 0;
-        int numberOfCups = 1;
-        String actualMessage = machine.Response(water, milk, coffee, numberOfCups);
-        String expectedMessage = "Sorry, there is not enough ingredients to make coffee!";
+        HashMap<String, Integer> beforeState = machine.getState();
 
-        assertEquals(expectedMessage, actualMessage);
-    }
+        ICoffeeRecipe mockCoffeeRecipe = mock(ICoffeeRecipe.class);
+        mockCoffeeRecipe.setWater(250);
+        mockCoffeeRecipe.setMilk(0);
+        mockCoffeeRecipe.setBeans(16);
+        mockCoffeeRecipe.setCost(4);
 
-    @Test
-    public void WhenDoesntHasEnoughIngredientsToMakeAnyCoffee_ThenOuputTheAppropiateMessage()
-    {
-        int water = 50;
-        int milk = 10;
-        int coffee = 15;
-        int numberOfCups = 3;
-        String actualMessage = machine.Response(water, milk, coffee, numberOfCups);
-        String expectedMessage = "Sorry, there is not enough ingredients to make coffee!";
+        machine.makeCoffee(mockCoffeeRecipe, cupsOrder);
 
-        assertEquals(expectedMessage, actualMessage);
+        HashMap<String, Integer> afterState = machine.getState();
+
+        assertNotEquals(beforeState, afterState);
     }
 }
