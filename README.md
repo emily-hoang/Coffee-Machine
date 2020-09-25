@@ -39,11 +39,11 @@ Yes, I can make that amount of coffee
 Write how many ml of water the coffee machine has:<br>
 `> 500`<br>
 Write how many ml of milk the coffee machine has:<br>
-`> 250<br>
+`> 250`<br>
 Write how many grams of coffee beans the coffee machine has:<br>
 `> 200`<br>
 Write how many cups of coffee you will need:<br>
-`> 10<br>
+`> 10`<br>
 No, I can make only 2 cup(s) of coffee
 #### Example 3
 
