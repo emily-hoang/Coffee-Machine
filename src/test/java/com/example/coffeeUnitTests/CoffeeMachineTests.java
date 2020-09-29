@@ -1,17 +1,17 @@
 package com.example.coffeeUnitTests;
 
 import com.example.coffee.CoffeeMachine;
-import com.example.coffee.ICoffeeRecipe;
+import com.example.coffee.CoffeeRecipe;
+import com.example.coffee.ICoffeeMachine;
 import com.example.coffee.ICoffeeRecipe;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.test.context.ContextConfiguration;
-
 import java.util.HashMap;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
 @ContextConfiguration
 public class CoffeeMachineTests {
@@ -21,110 +21,150 @@ public class CoffeeMachineTests {
     int currentCups = 10;
     int currentMoney = 500;
 
-    CoffeeMachine machine = new CoffeeMachine(currentWater, currentMilk, currentBeans, currentCups, currentMoney);
-
-    @ParameterizedTest
-    @CsvSource({ "300, 65, 100, 1" })
-    public void WhenHasEnoughIngredientsToMakeEnoughCoffeeOrder_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups)
-    {
-        String expectedMessage = "Yes, I can make that amount of coffee.";
-        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
-
-        assertEquals(expectedMessage, actualMessage);
-    }
-
-    @ParameterizedTest
-    @CsvSource({ "1550, 299, 300, 3, 2" })
-    public void WhenHasEnoughIngredientsToMakeMoreCoffeeThanOrder_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups, int additionalCups)
-    {
-        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
-        String expectedMessage = "Yes, I can make that amount of coffee (and even " + additionalCups + " more than that).";
-
-        assertEquals(expectedMessage, actualMessage);
-    }
-
-    @ParameterizedTest
-    @CsvSource({ "200, 50, 15, 0, 1" })
-    public void WhenHasEnoughIngredientsAndNoCoffeeIsRequested_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups, int additionalCups)
-    {
-        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
-        String expectedMessage = "Yes, I can make that amount of coffee (and even " + additionalCups + " more than that).";
-
-        assertEquals(expectedMessage, actualMessage);
-    }
-
-    @ParameterizedTest
-    @CsvSource({ "500, 250, 200, 10, 2" })
-    public void WhenDoesntHasEnoughIngredientsToMakeCoffeeOrder_ThenOutputTheAppropriateMessage(int water, int milk, int coffee, int requestedCups, int availableCups)
-    {
-        String expectedMessage = "Sorry, I can make only " + availableCups + " cup(s) of coffee.";
-        String actualMessage = machine.Response(water, milk, coffee, requestedCups);
-
-        assertEquals(expectedMessage, actualMessage);
-    }
+    ICoffeeMachine machine = new CoffeeMachine(currentWater, currentMilk, currentBeans, currentCups, currentMoney);
 
     @Test
-    public void PrintOutTheCurrentStateOfTheCoffeeMachine()
+    public void PrintOutTheCurrentResourcesOfTheCoffeeMachine()
     {
-        HashMap<String, Integer> expectedMachineState = new HashMap<>();
+        HashMap<String, Integer> expectedMachineResources = new HashMap<>();
 
-        expectedMachineState.put("water", currentWater);
-        expectedMachineState.put("milk", currentMilk);
-        expectedMachineState.put("beans", currentBeans);
-        expectedMachineState.put("cups", currentCups);
-        expectedMachineState.put("money", currentMoney);
+        expectedMachineResources.put("water", currentWater);
+        expectedMachineResources.put("milk", currentMilk);
+        expectedMachineResources.put("beans", currentBeans);
+        expectedMachineResources.put("cups", currentCups);
+        expectedMachineResources.put("money", currentMoney);
 
-        HashMap<String, Integer> actualMachineState = machine.getState();
+        HashMap<String, Integer> actualMachineResources = machine.getResources();
 
-        assertTrue(expectedMachineState.equals(actualMachineState));
+        assertTrue(expectedMachineResources.equals(actualMachineResources));
     }
 
     @ParameterizedTest
-    @CsvSource({ "1" })
-    public void WhenAbleToMakeCoffee_ThenReturnTrue(int cupsOrder)
+    @CsvSource({"250, 0, 16, 4, 1", "350, 75, 20, 7, 1", "200, 100, 12, 6, 1"})
+    public void WhenAbleToMakeCoffee_ThenReturnTrue(int requiredWater, int requiredMilk, int requiredBeans, int cost, int requiredCups)
     {
         ICoffeeRecipe mockCoffeeRecipe = mock(ICoffeeRecipe.class);
-        mockCoffeeRecipe.setWater(250);
-        mockCoffeeRecipe.setMilk(0);
-        mockCoffeeRecipe.setBeans(16);
-        mockCoffeeRecipe.setCost(4);
+        doReturn(requiredWater).when(mockCoffeeRecipe).getWater();
+        doReturn(requiredMilk).when(mockCoffeeRecipe).getMilk();
+        doReturn(requiredBeans).when(mockCoffeeRecipe).getBeans();
+        doReturn(cost).when(mockCoffeeRecipe).getCost();
 
-        boolean makeCoffee = machine.makeCoffee(mockCoffeeRecipe, cupsOrder);
+        boolean makeCoffee = machine.makeCoffee(mockCoffeeRecipe, requiredCups);
 
         assertEquals(true, makeCoffee);
     }
 
     @ParameterizedTest
-    @CsvSource({ "20" })
-    public void WhenNotAbleToMakeCoffee_ThenReturnFalse(int cupsOrder)
+    @CsvSource({"250, 0, 16, 4, 20", "350, 75, 20, 7, 20", "200, 100, 12, 6, 20"})
+    public void WhenNotAbleToMakeCoffee_ThenReturnFalse(int requiredWater, int requiredMilk, int requiredBeans, int cost, int requiredCups)
     {
         ICoffeeRecipe mockCoffeeRecipe = mock(ICoffeeRecipe.class);
-        mockCoffeeRecipe.setWater(250);
-        mockCoffeeRecipe.setMilk(0);
-        mockCoffeeRecipe.setBeans(16);
-        mockCoffeeRecipe.setCost(4);
+        doReturn(requiredWater).when(mockCoffeeRecipe).getWater();
+        doReturn(requiredMilk).when(mockCoffeeRecipe).getMilk();
+        doReturn(requiredBeans).when(mockCoffeeRecipe).getBeans();
+        doReturn(cost).when(mockCoffeeRecipe).getCost();
 
-        boolean makeCoffee = machine.makeCoffee(mockCoffeeRecipe, cupsOrder);
+        boolean makeCoffee = machine.makeCoffee(mockCoffeeRecipe, requiredCups);
 
         assertEquals(false, makeCoffee);
     }
 
     @ParameterizedTest
-    @CsvSource({ "1" })
-    public void AfterMakingCoffee_ThenReturnTheCurrentState(int cupsOrder)
+    @CsvSource({"250, 0, 16, 4, 1", "350, 75, 20, 7, 1", "200, 100, 12, 6, 1"})
+    public void WhenCoffeeOrderIsMade_ThenReturnTheCorrectResources(int requiredWater, int requiredMilk, int requiredBeans, int cost, int requiredCups)
     {
-        HashMap<String, Integer> beforeState = machine.getState();
-
         ICoffeeRecipe mockCoffeeRecipe = mock(ICoffeeRecipe.class);
-        mockCoffeeRecipe.setWater(250);
-        mockCoffeeRecipe.setMilk(0);
-        mockCoffeeRecipe.setBeans(16);
-        mockCoffeeRecipe.setCost(4);
+        doReturn(requiredWater).when(mockCoffeeRecipe).getWater();
+        doReturn(requiredMilk).when(mockCoffeeRecipe).getMilk();
+        doReturn(requiredBeans).when(mockCoffeeRecipe).getBeans();
+        doReturn(cost).when(mockCoffeeRecipe).getCost();
 
-        machine.makeCoffee(mockCoffeeRecipe, cupsOrder);
+        machine.makeCoffee(mockCoffeeRecipe, requiredCups);
+        HashMap<String, Integer> resourcesAfterTransaction = machine.getResources();
 
-        HashMap<String, Integer> afterState = machine.getState();
+        int expectedWaterAfterTransaction = currentWater - requiredWater;
+        int expectedMilkAfterTransaction = currentMilk - requiredMilk;
+        int expectedBeansAfterTransaction = currentBeans - requiredBeans;
+        int expectedMoneyAfterTransaction = currentMoney + cost;
+        int expectedCupsAfterTransaction = currentCups - requiredCups;
 
-        assertNotEquals(beforeState, afterState);
+        int actualWaterAfterTransaction = resourcesAfterTransaction.get("water");
+        int actualMilkAfterTransaction = resourcesAfterTransaction.get("milk");
+        int actualBeansAfterTransaction = resourcesAfterTransaction.get("beans");
+        int actualMoneyAfterTransaction = resourcesAfterTransaction.get("money");
+        int actualCupsAfterTransaction = resourcesAfterTransaction.get("cups");
+
+        assertEquals(expectedWaterAfterTransaction, actualWaterAfterTransaction);
+        assertEquals(expectedMilkAfterTransaction, actualMilkAfterTransaction);
+        assertEquals(expectedBeansAfterTransaction, actualBeansAfterTransaction);
+        assertEquals(expectedCupsAfterTransaction, actualCupsAfterTransaction);
+        assertEquals(expectedMoneyAfterTransaction, actualMoneyAfterTransaction);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"250, 0, 16, 4, 20", "350, 75, 20, 7, 20", "200, 100, 12, 6, 20"})
+    public void WhenCoffeeOrderIsNotMade_ThenReturnTheCorrectResources(int requiredWater, int requiredMilk, int requiredBeans, int cost, int requiredCups)
+    {
+        ICoffeeRecipe mockCoffeeRecipe = mock(ICoffeeRecipe.class);
+        doReturn(requiredWater).when(mockCoffeeRecipe).getWater();
+        doReturn(requiredMilk).when(mockCoffeeRecipe).getMilk();
+        doReturn(requiredBeans).when(mockCoffeeRecipe).getBeans();
+        doReturn(cost).when(mockCoffeeRecipe).getCost();
+
+        machine.makeCoffee(mockCoffeeRecipe, requiredCups);
+        HashMap<String, Integer> resourcesAfterTransaction = machine.getResources();
+
+        int expectedWaterAfterTransaction = currentWater;
+        int expectedMilkAfterTransaction = currentMilk;
+        int expectedBeansAfterTransaction = currentBeans;
+        int expectedMoneyAfterTransaction = currentMoney;
+        int expectedCupsAfterTransaction = currentCups;
+
+        int actualWaterAfterTransaction = resourcesAfterTransaction.get("water");
+        int actualMilkAfterTransaction = resourcesAfterTransaction.get("milk");
+        int actualBeansAfterTransaction = resourcesAfterTransaction.get("beans");
+        int actualMoneyAfterTransaction = resourcesAfterTransaction.get("money");
+        int actualCupsAfterTransaction = resourcesAfterTransaction.get("cups");
+
+        assertEquals(expectedWaterAfterTransaction, actualWaterAfterTransaction);
+        assertEquals(expectedMilkAfterTransaction, actualMilkAfterTransaction);
+        assertEquals(expectedBeansAfterTransaction, actualBeansAfterTransaction);
+        assertEquals(expectedCupsAfterTransaction, actualCupsAfterTransaction);
+        assertEquals(expectedMoneyAfterTransaction, actualMoneyAfterTransaction);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"500, 400, 150, 10", "200, 400, 300, 20"})
+    public void WhenRefillingResources_ThenReturnTheCorrectResources(int refillWater, int refillMilk, int refillBeans, int refillCups)
+    {
+        machine.refillResources(refillWater, refillMilk, refillBeans, refillCups);
+        HashMap<String, Integer> resourcesAfterTransaction = machine.getResources();
+
+        int expectedCurrentWaterAfterRefilling = currentWater + refillWater;
+        int expectedCurrentMilkAfterRefilling = currentMilk + refillMilk;
+        int expectedCurrentBeansAfterRefilling = currentBeans + refillBeans;
+        int expectedCurrentCupsAfterRefilling = currentCups + refillCups;
+
+        int actualCurrentWaterAfterRefilling = resourcesAfterTransaction.get("water");
+        int actualCurrentMilkAfterRefilling = resourcesAfterTransaction.get("milk");
+        int actualCurrentBeansAfterRefilling = resourcesAfterTransaction.get("beans");
+        int actualCurrentCupsAfterRefilling = resourcesAfterTransaction.get("cups");
+
+        assertEquals(expectedCurrentWaterAfterRefilling, actualCurrentWaterAfterRefilling);
+        assertEquals(expectedCurrentMilkAfterRefilling, actualCurrentMilkAfterRefilling);
+        assertEquals(expectedCurrentBeansAfterRefilling, actualCurrentBeansAfterRefilling);
+        assertEquals(expectedCurrentCupsAfterRefilling, actualCurrentCupsAfterRefilling);
+    }
+
+    @Test
+    public void AfterDispensingMoney_ThenReturnTheCorrectDispensedMoneyAmount()
+    {
+        int actualDispensedMoney = machine.dispenseMoney();
+        assertEquals(actualDispensedMoney, currentMoney);
+
+        HashMap<String, Integer> resourcesAfterTransaction = machine.getResources();
+
+        int expectedCurrentMoneyAfterDispensing = resourcesAfterTransaction.get("money");
+        assertEquals(expectedCurrentMoneyAfterDispensing, 0);
     }
 }

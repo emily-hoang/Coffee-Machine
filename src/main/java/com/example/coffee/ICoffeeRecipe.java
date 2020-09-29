@@ -1,11 +1,6 @@
 package com.example.coffee;
 
 public interface ICoffeeRecipe {
-     int water = 0;
-     int milk = 0;
-     int beans = 0;
-     int cost = 0;
-
      int getWater();
      void setWater(int water);
 
